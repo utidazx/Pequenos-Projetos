@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8">
+  <title>Love Heart</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="c"></canvas>
+  <script>
+    const PHRASES = [
+      "I love you", "Seni seviyorum", "Te amo", "Je t'aime",
+      "Ich liebe dich", "Ti amo", "Eu te amo", "Я тебя люблю",
+      "사랑해", "我爱你", "愛してる", "मैं तुमसे प्यार करता हूँ",
+      "أحبك", "S'agapó", "Ik hou van jou", "Jeg elsker dig",
+      "Kocham cię", "Szeretlek", "Anh yêu em", "Aku cinta kamu",
+    ];
+    const PALETTE = ["#ff1744", "#ff4d6d", "#ff758f", "#ff8fa3", "#ffb3c1", "#e5383b", "#ff006e", "#fb6f92"];
+    const N_OUTLINE = 120, N_FILL = 230, SPAWN_PER_FRAME = 4;
+
+    // gerador aleatório com semente (11), igual ao vídeo
+    let seed = 11;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const pick = a => a[Math.floor(rnd() * a.length)];
+    const randint = (a, b) => a + Math.floor(rnd() * (b - a + 1));
+
+    const cv = document.getElementById("c");
+    const ctx = cv.getContext("2d");
+    let W, H, SCALE, OFFSET_Y;
+    function resize() {
+      const size = Math.min(innerWidth, innerHeight);
+      const dpr = devicePixelRatio || 1;
+      W = H = size;
+      cv.width = size * dpr; cv.height = size * dpr;
+      cv.style.width = size + "px"; cv.style.height = size + "px";
+      cv.style.marginTop = (innerHeight - size) / 2 + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      SCALE = size / 38; OFFSET_Y = size * 0.04;
+    }
+    resize(); addEventListener("resize", resize);
+
+    // curva paramétrica do coração (coordenadas em "unidades de coração")
+    function heart(a) {
+      const x = 16 * Math.sin(a) ** 3;
+      const y = 13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a);
+      return [x, y];
+    }
+
+    const particles = [];
+    for (let i = 0; i < N_OUTLINE; i++) {
+      const [x, y] = heart(2 * Math.PI * i / N_OUTLINE);
+      particles.push({ x, y, text: pick(PHRASES), size: randint(9, 13), color: pick(PALETTE.slice(0, 4)) });
+    }
+    const CY = 2; // centro visual do coração
+    for (let i = 0; i < N_FILL; i++) {
+      const [x, y] = heart(rnd() * 2 * Math.PI);
+      const k = 0.12 + Math.sqrt(rnd()) * 0.8;
+      particles.push({ x: x * k, y: CY + (y - CY) * k, text: pick(PHRASES), size: randint(7, 12), color: pick(PALETTE) });
+    }
+    for (let i = particles.length - 1; i > 0; i--) { // embaralha
+      const j = Math.floor(rnd() * (i + 1));[particles[i], particles[j]] = [particles[j], particles[i]];
+    }
+
+    let frame = 0, shown = 0;
+    function draw() {
+      if (shown < particles.length) {
+        for (const p of particles.slice(shown, shown + SPAWN_PER_FRAME)) p.born = frame;
+        shown += SPAWN_PER_FRAME;
+      }
+      const done = shown >= particles.length;
+      let beat = 1;
+      if (done) { // batida dupla (tum-tum)
+        const ph = (frame % 50) / 50;
+        beat += 0.05 * Math.exp(-(((ph - 0.10) / 0.05) ** 2));
+        beat += 0.03 * Math.exp(-(((ph - 0.30) / 0.05) ** 2));
+      }
+
+      ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      const s = SCALE / 21; // fontes proporcionais ao tamanho da tela
+      for (const p of particles.slice(0, shown)) {
+        const f = Math.min(1, (frame - p.born) / 15);
+        const jitter = done ? 0 : (1 - f) * 6;
+        const x = W / 2 + p.x * SCALE * beat;
+        const y = H / 2 - (OFFSET_Y + (CY + (p.y - CY) * beat) * SCALE) + jitter;
+        ctx.globalAlpha = f;
+        ctx.fillStyle = p.color;
+        ctx.font = `bold ${Math.round(p.size * 1.35 * s)}px "Segoe UI", system-ui, sans-serif`;
+        ctx.fillText(p.text, x, y);
+      }
+      if (done) {
+        ctx.globalAlpha = 0.6 + 0.4 * Math.sin(frame / 8);
+        ctx.fillStyle = "#ffb3c1";
+        ctx.font = `bold ${Math.round(20 * s)}px "Segoe UI", system-ui, sans-serif`;
+        ctx.fillText("Can you find yours? ❤", W / 2, H - 40 * s);
+      }
+      ctx.globalAlpha = 1;
+      frame++;
+      setTimeout(() => requestAnimationFrame(draw), 30);
+    }
+    draw();
+  </script>
+</body>
+
+</html>
