@@ -14,6 +14,7 @@ Abaixo encontra a lista dos projetos disponíveis neste repositório:
 | **`Controlador_de_gastos`** | Aplicação para gestão e controlo de despesas financeiras pessoais. |
 | **`Sistema_Atividade_Github`** | Aplicação para consultar ou gerir atividades/dados do GitHub. |
 | **`Sistema_basico_de_tarefas`** | Aplicação estilo *To-Do List* para gestão simples de tarefas. |
+| **[dio-pokedex](./dio-pokedex/)** | Pokédex responsiva em HTML, CSS e JavaScript, com dados da PokéAPI. |
 | **`love.html`** | Ficheiro HTML interativo/temático. |
 
 ---
