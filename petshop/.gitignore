@@ -1,0 +1,5 @@
+# Arquivos gerados ao compilar e executar
+*.exe
+*.out
+/petshop
+petshop.bin
